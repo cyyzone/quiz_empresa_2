@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatórios de Desempenho{% endblock %}
+
+{% block content %}
+<div class="dashboard-container" style="max-width: 1000px; text-align: left;">
+    <h1 style="text-align: center;">Relatórios de Desempenho</h1>
+    <p style="text-align: center;">Acompanhe o desempenho geral e a participação de cada colaborador.</p>
+
+    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #dee2e6;">
+    <div style="display: flex; align-items: flex-end; flex-wrap: wrap; gap: 15px;">
+        <form method="get" action="{{ url_for('pagina_relatorios') }}" style="display: flex; align-items: center; gap: 15px; flex-grow: 1;">
+            <div style="flex: 1 1 300px;">
+                <label for="filtro_setor" style="font-weight: bold;">Filtrar por Setor:</label>
+                <select name="departamento_id" onchange="this.form.submit()" style="width: 100%;">
+                    <option value="">-- Todos os Setores --</option>
+                    {% for depto in departamentos %}
+                        <option value="{{ depto.id }}" {% if depto.id == depto_selecionado_id %}selected{% endif %}>
+                            {{ depto.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="align-self: flex-end;">
+                <button type="submit" class="btn" style="padding: 10px 15px; margin: 0;">Filtrar</button>
+            </div>
+        </form>
+        <div style="align-self: flex-end; display: flex; gap: 10px;">
+            <a href="{{ url_for('pagina_relatorios') }}" class="btn btn-secondary" style="padding: 10px 15px; margin: 0;">Limpar</a>
+            <a href="{{ url_for('exportar_relatorios', departamento_id=depto_selecionado_id) }}" class="btn" style="background-color: #1a6a43; padding: 10px 15px; margin: 0;">Exportar para Excel</a>
+        </div>
+    </div>
+</div>
+
+    <div class="ranking-container" style="max-width: 100%; overflow-x: auto;">
+        <table class="preview-table">
+            <thead>
+                <tr>
+                    <th>Colaborador</th>
+                    <th>Setor</th>
+                    <th>Respostas Totais</th>
+                    <th>Respostas Corretas</th>
+                    <th>Aproveitamento</th>
+                    <th>Pontuação Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for relatorio in relatorios %}
+                <tr>
+                    <td>{{ relatorio.nome }}</td>
+                    <td>{{ relatorio.setor }}</td>
+                    <td style="text-align: center;">{{ relatorio.total_respostas }}</td>
+                    <td style="text-align: center;">{{ relatorio.respostas_corretas }}</td>
+                    <td style="text-align: center;">
+                        <strong style="color: {% if relatorio.aproveitamento >= 80 %}#28a745{% elif relatorio.aproveitamento >= 50 %}#ffc107{% else %}#dc3545{% endif %};">
+                            {{ "%.1f"|format(relatorio.aproveitamento) }}%
+                        </strong>
+                    </td>
+                    <td style="text-align: center; font-weight: bold;">{{ relatorio.pontuacao_total }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center;">Nenhum dado encontrado para os filtros selecionados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px;">
+        <a href="{{ url_for('pagina_admin') }}" class="btn btn-secondary">Voltar ao Admin</a>
+    </div>
+</div>
+{% endblock %}

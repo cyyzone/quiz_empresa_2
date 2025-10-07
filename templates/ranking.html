@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Ranking por Setor{% endblock %}
+
+{% block content %}
+<div class="ranking-container">
+    <h1>🏆 Ranking por Setor 🏆</h1>
+    <p style="text-align: center; margin-top: -10px; margin-bottom: 20px;">
+        A pontuação é a média de pontos por pessoa na equipe.
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Pos.</th>
+                <th>Setor (clique para ver detalhes)</th>
+                <th>Pontuação (Média)</th>
+                <th>Membros</th>
+                <th>Pontos Totais</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for depto in ranking %}
+            <tr>
+                <td><b>{{ loop.index }}</b></td>
+                <td>
+                    <a href="{{ url_for('pagina_ranking_detalhe', departamento_id=depto.id) }}" title="Ver ranking individual de {{ depto.nome }}">
+                        {{ depto.nome }}
+                    </a>
+                </td>
+                <td><strong style="font-size: 20px;">{{ depto.pontuacao_proporcional }}</strong></td>
+                <td>{{ depto.num_usuarios }}</td>
+                <td>{{ depto.pontos_totais }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="text-align: center;">Ainda não há pontuações registradas.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="{{ url_for('dashboard') }}">Voltar para o Dashboard</a>
+    </div>
+</div>
+{% endblock %}

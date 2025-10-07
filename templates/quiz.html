@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Quiz!{% endblock %}
+
+{% block content %}
+<div class="quiz-container">
+    <div id="timer" class="timer">{{ pergunta.tempo_limite }}</div>
+    <p class="question">{{ pergunta.texto }}</p>
+
+    <form id="quiz-form" action="{{ url_for('processa_resposta') }}" method="post">
+        <input type="hidden" name="pergunta_id" value="{{ pergunta.id }}">
+        <input type="hidden" name="tempo_restante" id="tempo_restante" value="{{ pergunta.tempo_limite }}">
+        
+        <div class="options">
+            {% if pergunta.tipo == 'multipla_escolha' %}
+                <button type="submit" name="resposta" value="a" class="option-btn"><b>A)</b> {{ pergunta.opcao_a }}</button>
+                <button type="submit" name="resposta" value="b" class="option-btn"><b>B)</b> {{ pergunta.opcao_b }}</button>
+                <button type="submit" name="resposta" value="c" class="option-btn"><b>C)</b> {{ pergunta.opcao_c }}</button>
+                <button type="submit" name="resposta" value="d" class="option-btn"><b>D)</b> {{ pergunta.opcao_d }}</button>
+            {% elif pergunta.tipo == 'verdadeiro_falso' %}
+                <button type="submit" name="resposta" value="v" class="option-btn">✔️ Verdadeiro</button>
+                <button type="submit" name="resposta" value="f" class="option-btn">❌ Falso</button>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<audio id="tick-sound" src="{{ url_for('static', filename='sounds/tick.mp3') }}" preload="auto"></audio>
+<audio id="buzzer-sound" src="{{ url_for('static', filename='sounds/buzzer.mp3') }}" preload="auto"></audio>
+
+<script>
+    const timerElement = document.getElementById('timer');
+    const formElement = document.getElementById('quiz-form');
+    const tempoRestanteInput = document.getElementById('tempo_restante');
+    const tickSound = document.getElementById('tick-sound');
+    const buzzerSound = document.getElementById('buzzer-sound');
+
+    let timeLeft = parseInt(timerElement.textContent);
+
+    const timerInterval = setInterval(() => {
+        timeLeft--;
+        timerElement.textContent = timeLeft;
+        tempoRestanteInput.value = timeLeft;
+
+        if (timeLeft > 0 && tickSound) {
+            tickSound.currentTime = 0;
+            tickSound.play().catch(e => console.log("Erro ao tocar som de tick:", e));
+        }
+
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            if (tickSound) tickSound.pause();
+
+            timerElement.textContent = "Esgotado!";
+            if (buzzerSound) {
+                buzzerSound.play().catch(e => console.log("Erro ao tocar som de buzzer:", e));
+            }
+
+            document.querySelectorAll('#quiz-form button').forEach(button => {
+                button.disabled = true;
+            });
+
+            setTimeout(() => {
+                formElement.submit();
+            }, 1200);
+        }
+    }, 1000);
+
+    formElement.addEventListener('submit', () => {
+        if (tickSound) tickSound.pause();
+        clearInterval(timerInterval);
+    });
+</script>
+{% endblock %}

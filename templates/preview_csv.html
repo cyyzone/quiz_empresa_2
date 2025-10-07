@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Pré-visualização da Importação{% endblock %}
+
+{% block content %}
+<div class="dashboard-container" style="max-width: 95%;">
+    <h1>Pré-visualização e Validação da Planilha</h1>
+    <p>Corrija os erros diretamente na tabela. As linhas em verde estão prontas para importação. As linhas em vermelho precisam de correção.</p>
+
+    <form action="{{ url_for('processar_edicao_csv') }}" method="post">
+        <div class="ranking-container" style="max-width: 100%; overflow-x: auto;">
+            <table class="preview-table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        {% for header in headers %}
+                            <th>{{ header }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row_item in data %}
+                        {% set row_index = loop.index0 %}
+                        <tr class="{{ 'valid-row' if row_item.is_valid else 'invalid-row' }}">
+                            <td>
+                                {% if row_item.is_valid %} ✔️ Válido {% else %} ❌ Erro {% endif %}
+                            </td>
+                            
+                            {% for key in headers %}
+                                <td>
+                                    <input type="text" 
+                                           name="row-{{ row_index }}-{{ key }}" 
+                                           value="{{ row_item.data.get(key, '') }}"
+                                           class="{{ 'cell-error' if key in row_item.errors else '' }}"
+                                           title="{{ row_item.errors.get(key, '') }}"
+                                           style="width: 100%; min-width: 150px; box-sizing: border-box;">
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <button type="submit" class="btn">Importar Perguntas Corrigidas</button>
+            <a href="{{ url_for('pagina_admin') }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+
+</div>
+{% endblock %}

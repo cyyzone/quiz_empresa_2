@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Avaliação de Atividades{% endblock %}
+
+{% block content %}
+<div class="dashboard-container" style="max-width: 900px; text-align: left;">
+    <h1 style="text-align: center;">Avaliação de Atividades Discursivas</h1>
+    <p style="text-align: center;">Revise as respostas enviadas pelos usuários e, se desejar, deixe um feedback para o usuário.</p>
+    
+    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #dee2e6;">
+        <form method="get" action="{{ url_for('pagina_correcoes') }}" style="display: flex; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div style="flex: 1 1 300px;">
+                <label for="usuario_id" style="font-weight: bold;">Filtrar por Colaborador:</label>
+                <select name="usuario_id" onchange="this.form.submit()" style="width: 100%;">
+                    <option value="">-- Todos os Colaboradores --</option>
+                    {% for usuario in usuarios_disponiveis %}
+                        <option value="{{ usuario.id }}" {% if usuario.id == usuario_selecionado_id %}selected{% endif %}>
+                            {{ usuario.nome }} ({{ usuario.departamento.nome }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="flex: 1 1 200px;">
+                <label for="status" style="font-weight: bold;">Filtrar por Status:</label>
+                <select name="status" onchange="this.form.submit()" style="width: 100%;">
+                    <option value="pendente" {% if status_selecionado == 'pendente' %}selected{% endif %}>Pendentes</option>
+                    <option value="correto" {% if status_selecionado == 'correto' %}selected{% endif %}>Corretas</option>
+                    <option value="parcialmente_correto" {% if status_selecionado == 'parcialmente_correto' %}selected{% endif %}>Parcialmente Corretas</option>
+                    <option value="incorreto" {% if status_selecionado == 'incorreto' %}selected{% endif %}>Incorretas</option>
+                    <option value="todos" {% if status_selecionado == 'todos' %}selected{% endif %}>Todas</option>
+                </select>
+            </div>
+            <div style="align-self: flex-end;">
+                <button type="submit" class="btn" style="padding: 10px 15px; margin: 0;">Filtrar</button>
+                <a href="{{ url_for('pagina_correcoes') }}" class="btn btn-secondary" style="padding: 10px 15px; margin: 0;">Limpar</a>
+            </div>
+        </form>
+    </div>
+
+    <hr style="margin: 30px 0;">
+
+    {% for resposta in respostas %}
+        <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 20px;
+                    border-left: 5px solid {{ '#ffc107' if resposta.status_correcao == 'pendente' else '#28a745' if resposta.status_correcao == 'correto' else '#fd7e14' if resposta.status_correcao == 'parcialmente_correto' else '#dc3545' }};">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+                <div>
+                    <strong>Usuário:</strong> {{ resposta.usuario.nome }} ({{ resposta.usuario.departamento.nome }})<br>
+                    <strong>Enviado em:</strong> {{ resposta.data_resposta | datetime_local }}
+                </div>
+                <div>
+                    {% if resposta.status_correcao == 'correto' %}
+                        <strong style="color: #155724;">✔️ Correto</strong>
+                    {% elif resposta.status_correcao == 'parcialmente_correto' %}
+                        <strong style="color: #fd7e14;">⚠️ Parcialmente Correto</strong>
+                    {% elif resposta.status_correcao == 'incorreto' %}
+                        <strong style="color: #721c24;">❌ Incorreto</strong>
+                    {% else %}
+                        <strong style="color: #856404;">PENDENTE</strong>
+                    {% endif %}
+                </div>
+            </div>
+
+            <p><strong>Pergunta:</strong> {{ resposta.pergunta.texto }}</p>
+            {% if resposta.pergunta.imagem_pergunta %}
+                <img src="{{ resposta.pergunta.imagem_pergunta }}" alt="Imagem da pergunta" style="max-width: 100%; max-height: 200px; width: auto; display: block; margin: 10px auto; border-radius: 8px;">
+            {% endif %}
+
+            <div style="background-color: white; padding: 15px; border-radius: 5px; margin-top: 10px;">
+                <p><strong>Resposta do usuário:</strong></p>
+                <p style="white-space: pre-wrap;">{{ resposta.texto_discursivo }}</p>
+            </div>
+            
+            {% if resposta.anexo_resposta %}
+                <div style="margin-top: 15px;">
+                    <strong>Anexo enviado:</strong> 
+                    <a href="{{ resposta.anexo_resposta }}" target="_blank" style="font-weight: bold;">
+                        Ver Anexo
+                    </a>
+                </div>
+            {% endif %}
+
+            {% if resposta.status_correcao == 'pendente' %}
+                <form action="{{ url_for('corrigir_resposta', resposta_id=resposta.id) }}" method="post">
+                    <div style="margin-top: 20px;">
+                        <label for="feedback"><strong>Seu Feedback (Opcional):</strong></label><br>
+                        <textarea name="feedback" rows="3" style="width: 100%; box-sizing: border-box;"></textarea>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                        <button type="submit" name="status" value="incorreto" class="btn btn-secondary" style="background-color: #dc3545;">Incorreta</button>
+                        <button type="submit" name="status" value="parcialmente_correto" class="btn btn-secondary" style="background-color: #ffc107; color: #333;">Parcial</button>
+                        <button type="submit" name="status" value="correto" class="btn">Correta</button>
+                    </div>
+                </form>
+            {% else %}
+                <div style="margin-top: 20px; padding: 15px; border-radius: 5px; background-color: #e9ecef;">
+                    <strong>Feedback enviado:</strong>
+                    <p style="white-space: pre-wrap; margin-top: 5px; margin-bottom: 0;">{{ resposta.feedback_admin or '(Nenhum feedback foi enviado)' }}</p>
+                </div>
+            {% endif %}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 40px; background-color: #d4edda; border-radius: 8px;">
+            <h2 style="color: #155724;">Tudo em dia!</h2>
+            <p>
+                {% if usuario_selecionado_id %}
+                    Este colaborador não tem respostas com o status selecionado.
+                {% else %}
+                    Não há nenhuma resposta com o status selecionado no momento.
+                {% endif %}
+            </p>
+        </div>
+    {% endfor %}
+    
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="{{ url_for('pagina_admin') }}" class="btn btn-secondary">Voltar para o Admin</a>
+    </div>
+</div>
+{% endblock %}

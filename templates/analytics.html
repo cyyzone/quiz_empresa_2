@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatórios de Erros{% endblock %}
+
+{% block content %}
+<div class="dashboard-container" style="max-width: 900px;">
+    <h1>Relatórios e Análises</h1>
+
+    <div style="background-color: #f0f8ff; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #bde0ff; text-align: left;">
+    <h3 style="margin-top: 0;">Exportar Relatórios Detalhados</h3>
+    <p style="font-size: 14px; margin-bottom: 15px;">Gere uma planilha Excel com todas as respostas individuais, separadas por tipo de atividade.</p>
+    
+    <form method="get" id="export-form" style="display: flex; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div style="flex-grow: 1;">
+            <label for="departamento_id_export" style="font-weight: bold;">Filtrar por Setor (Opcional):</label>
+            <select name="departamento_id" id="departamento_id_export" style="width: 100%;">
+                <option value="">-- Todos os Setores --</option>
+                {% for depto in departamentos %}
+                    <option value="{{ depto.id }}">{{ depto.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="align-self: flex-end; display: flex; gap: 10px; margin-top: 10px;">
+            <button type="submit" formaction="{{ url_for('exportar_respostas_detalhado', tipo='quiz') }}" class="btn" style="background-color: #1a6a43;">
+                Exportar Quiz Rápido
+            </button>
+            <button type="submit" formaction="{{ url_for('exportar_respostas_detalhado', tipo='discursivas') }}" class="btn" style="background-color: #1a6a43;">
+                Exportar Discursivas
+            </button>
+        </div>
+    </form>
+</div>
+
+    <div style="background-color: #66df4e; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #dee2e6; text-align: left;">
+        <form method="get" action="{{ url_for('pagina_analytics') }}" style="display: flex; align-items: center; gap: 15px;">
+            <label for="usuario_id" style="font-weight: bold;">Filtrar por Colaborador:</label>
+            <select name="usuario_id" onchange="this.form.submit()" style="flex-grow: 1;">
+                <option value="">-- Todos os Colaboradores --</option>
+                {% for usuario in usuarios_disponiveis %}
+                    <option value="{{ usuario.id }}" {% if usuario.id == usuario_selecionado_id %}selected{% endif %}>
+                        {{ usuario.nome }} ({{ usuario.departamento.nome }})
+                    </option>
+                {% endfor %}
+            </select>
+            <a href="{{ url_for('pagina_analytics') }}" class="btn btn-secondary" style="padding: 10px 15px; margin: 0;">Limpar</a>
+        </form>
+    </div>
+
+    <h2>Percentual de Erros por Pergunta {% if usuario_selecionado_id %}<span style="font-size: 16px; color: #6c757d;">(Filtrado)</span>{% endif %}</h2>
+    <div class="ranking-container" style="max-width: 900px;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Pergunta</th>
+                    <th>Total de Respostas</th>
+                    <th>Respostas Incorretas</th>
+                    <th>Percentual de Erro</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stat in stats_perguntas %}
+                <tr>
+                    <td style="white-space: normal;">{{ stat.texto }}</td>
+                    <td>{{ stat.total }}</td>
+                    <td>{{ stat.erros }}</td>
+                    <td>
+                        <strong style="color: {% if stat.percentual > 50 %}#dc3545{% elif stat.percentual > 25 %}#ffc107{% else %}#28a745{% endif %};">
+                            {{ "%.1f"|format(stat.percentual) }}%
+                        </strong>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" style="text-align: center;">Nenhum dado de resposta para analisar com este filtro.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <hr style="margin: 40px 0;">
+
+    <h2>Análise de Erros por Setor e Membro {% if usuario_selecionado_id %}<span style="font-size: 16px; color: #6c757d;">(Filtrado)</span>{% endif %}</h2>
+    <div class="ranking-container" style="max-width: 900px; text-align: left;">
+        {% for setor, usuarios in erros_por_setor.items() %}
+            <h2 style="background-color: var(--cor-primaria); color: white; padding: 10px; border-radius: 8px;">Setor: {{ setor }}</h2>
+            {% for usuario, erros in usuarios.items() %}
+                <h3 style="border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 25px;">Membro: {{ usuario }}</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Pergunta (Liberada em)</th>
+                            <th>Sua Resposta</th>
+                            <th>Resposta Correta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for erro in erros %}
+                        <tr>
+                            <td style="white-space: normal;">{{ erro.pergunta_texto }} ({{ erro.data_liberacao }})</td>
+                            <td style="background-color: #f8d7da;"><b>{{ erro.resposta_dada.upper() if erro.resposta_dada else '' }}</b> {{ erro.texto_resposta_dada }}</td>
+                            <td style="background-color: #d4edda;"><b>{{ erro.resposta_correta.upper() if erro.resposta_correta else '' }}</b> {{ erro.texto_resposta_correta }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endfor %}
+        {% else %}
+            <p style="text-align: center; padding-top: 20px;">
+                {% if usuario_selecionado_id %}
+                    Este colaborador não tem erros registrados!
+                {% else %}
+                    Nenhuma resposta incorreta registrada!
+                {% endif %}
+            </p>
+        {% endfor %}
+    </div>
+
+    <p style="margin-top: 20px; text-align: center;"><a href="{{ url_for('pagina_admin') }}">Voltar para o Admin</a></p>
+</div>
+{% endblock %}

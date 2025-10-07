@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Usuário{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h1>Editar Usuário: {{ usuario.nome }}</h1>
+
+    <form method="post" style="text-align: left; max-width: 500px; margin: auto; background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
+        <label for="nome">Nome do Colaborador:</label><br>
+        <input type="text" name="nome" style="width: 100%;" value="{{ usuario.nome }}" required><br><br>
+
+        <label for="email">E-mail (Opcional):</label><br>
+        <input type="email" name="email" value="{{ usuario.email or '' }}"><br><br>
+
+        <label for="codigo_acesso">Código de Acesso (4 dígitos):</label><br>
+        <input type="text" name="codigo_acesso" maxlength="4" style="width: 100%;" value="{{ usuario.codigo_acesso }}" required><br><br>
+
+        <label for="departamento_id">Setor:</label><br>
+        <select name="departamento_id" style="width: 100%;" required>
+            {% for depto in departamentos %}
+                <option value="{{ depto.id }}" {% if depto.id == usuario.departamento_id %}selected{% endif %}>
+                    {{ depto.nome }}
+                </option>
+            {% endfor %}
+        </select><br><br>
+
+        <button type="submit" class="btn">Salvar Alterações</button>
+        <a href="{{ url_for('pagina_admin') }}" style="margin-left: 10px;">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

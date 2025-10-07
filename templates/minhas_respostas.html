@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Minhas Respostas{% endblock %}
+
+{% block content %}
+<div class="dashboard-container" style="max-width: 900px; text-align: left;">
+    <h1 style="text-align: center;">📋 Minhas Respostas 📋</h1>
+    <p style="text-align: center;">Acompanhe o status e o feedback das suas atividades.</p>
+
+    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #dee2e6;">
+        <form method="get" action="{{ url_for('minhas_respostas') }}" style="display: flex; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div style="flex: 1 1 200px;">
+                <label for="filtro_tipo" style="font-weight: bold;">Tipo de Pergunta:</label>
+                <select name="filtro_tipo" style="width: 100%;">
+                    <option value="" {% if not filtro_tipo %}selected{% endif %}>-- Todos os Tipos --</option>
+                    <option value="multipla_escolha" {% if filtro_tipo == 'multipla_escolha' %}selected{% endif %}>Múltipla Escolha</option>
+                    <option value="verdadeiro_falso" {% if filtro_tipo == 'verdadeiro_falso' %}selected{% endif %}>Verdadeiro ou Falso</option>
+                    <option value="discursiva" {% if filtro_tipo == 'discursiva' %}selected{% endif %}>Discursiva</option>
+                </select>
+            </div>
+            <div style="flex: 1 1 200px;">
+                <label for="filtro_resultado" style="font-weight: bold;">Resultado:</label>
+                <select name="filtro_resultado" style="width: 100%;">
+                    <option value="" {% if not filtro_resultado %}selected{% endif %}>-- Todos os Resultados --</option>
+                    <option value="corretas" {% if filtro_resultado == 'corretas' %}selected{% endif %}>Apenas Corretas</option>
+                    <option value="parcialmente_corretas" {% if filtro_resultado == 'parcialmente_corretas' %}selected{% endif %}>Parcialmente Corretas</option>
+                    <option value="incorretas" {% if filtro_resultado == 'incorretas' %}selected{% endif %}>Apenas Incorretas</option>
+                    <option value="pendentes" {% if filtro_resultado == 'pendentes' %}selected{% endif %}>Pendentes de Avaliação</option>
+                </select>
+            </div>
+            <div style="align-self: flex-end;">
+                <button type="submit" class="btn" style="padding: 10px 15px; margin: 0;">Filtrar</button>
+                <a href="{{ url_for('minhas_respostas') }}" class="btn btn-secondary" style="padding: 10px 15px; margin: 0;">Limpar</a>
+            </div>
+        </form>
+    </div>
+
+    {% for resposta in respostas %}
+        <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <p style="font-size: 20px; font-weight: bold; margin-bottom: 15px;">{{ resposta.pergunta.texto }}</p>
+            
+            {% if resposta.pergunta.tipo == 'discursiva' %}
+                <p style="white-space: pre-wrap; background-color: white; padding: 10px; border-radius: 5px;">{{ resposta.texto_discursivo }}</p>
+                
+                {% if resposta.status_correcao == 'pendente' %}
+                    <div style="margin-top: 15px; padding: 10px; background-color: #fff3cd; color: #856404; border-radius: 5px;">
+                        <strong>Status:</strong> Aguardando avaliação do administrador.
+                    </div>
+                {% elif resposta.status_correcao in ['correto', 'incorreto', 'parcialmente_correto'] %}
+                     <div style="margin-top: 15px; padding: 15px; border-radius: 5px; border-left: 5px solid {{ '#28a745' if resposta.status_correcao == 'correto' else '#fd7e14' if resposta.status_correcao == 'parcialmente_correto' else '#dc3545' }};">
+                        <strong>Avaliação: 
+                            {% if resposta.status_correcao == 'correto' %}Correto
+                            {% elif resposta.status_correcao == 'parcialmente_correto' %}Parcialmente Correto
+                            {% else %}Incorreto
+                            {% endif %}
+                        </strong>
+                        {% if resposta.feedback_admin %}
+                           <p style="white-space: pre-wrap; margin-top: 5px; margin-bottom: 0;"><strong>Feedback:</strong> {{ resposta.feedback_admin }}</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            
+            {% else %} {# Para múltipla escolha ou v/f #}
+                <p style="padding: 10px; border-radius: 5px; background-color: {{ '#f8d7da' if resposta.pontos == 0 else 'white' }};">
+                    <strong>Sua resposta:</strong> ({{ resposta.resposta_dada.upper() if resposta.resposta_dada else '' }}) {{ get_texto_da_opcao(resposta.pergunta, resposta.resposta_dada) }}
+                </p>
+                {% if resposta.pontos == 0 %}
+                    <p style="padding: 10px; border-radius: 5px; background-color: #d4edda;">
+                        <strong>Resposta correta:</strong> ({{ resposta.pergunta.resposta_correta.upper() }}) {{ get_texto_da_opcao(resposta.pergunta, resposta.pergunta.resposta_correta) }}
+                    </p>
+                {% endif %}
+            {% endif %}
+        </div>
+    {% else %}
+        <p style="text-align: center; padding: 20px;">Nenhuma resposta encontrada com os filtros selecionados.</p>
+    {% endfor %}
+
+    <div style="text-align: center; margin-top: 30px;">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Voltar ao Dashboard</a>
+    </div>
+</div>
+{% endblock %}

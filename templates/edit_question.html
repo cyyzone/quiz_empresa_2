@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Pergunta{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h1>Editar Pergunta</h1>
+
+    <form method="post" enctype="multipart/form-data" style="text-align: left; max-width: 600px; margin: auto; background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
+        
+        <label for="tipo">Tipo de Pergunta:</label><br>
+        <select id="tipo-pergunta" name="tipo" required onchange="toggleQuestionFields()">
+            <option value="multipla_escolha" {% if pergunta.tipo == 'multipla_escolha' %}selected{% endif %}>Múltipla Escolha</option>
+            <option value="verdadeiro_falso" {% if pergunta.tipo == 'verdadeiro_falso' %}selected{% endif %}>Verdadeiro ou Falso</option>
+            <option value="discursiva" {% if pergunta.tipo == 'discursiva' %}selected{% endif %}>Discursiva</option>
+        </select><br><br>
+
+        <label for="texto">Texto da Pergunta:</label><br>
+        <textarea name="texto" rows="3" style="width: 100%;" required>{{ pergunta.texto }}</textarea><br><br>
+
+        <label for="imagem_pergunta">Imagem de Exemplo (Opcional):</label><br>
+        {% if pergunta.imagem_pergunta %}
+        <p style="font-size: 14px;">Imagem atual: {{ pergunta.imagem_pergunta }}. Envie uma nova para substituir.</p>
+        {% endif %}
+        <input type="file" name="imagem_pergunta" accept="image/*"><br><br>
+
+        <div id="setores-alvo">
+            <label>Setores Alvo:</label>
+            <div style="background-color: #e9ecef; padding: 15px; border-radius: 8px;">
+                <div>
+                    <input type="checkbox" id="para_todos" name="para_todos_setores" value="sim" onchange="toggleAllSectors(this.checked)" {% if pergunta.para_todos_setores %}checked{% endif %}>
+                    <label for="para_todos" style="font-weight: bold;">Para Todos os Setores</label>
+                </div>
+                <hr>
+                <div id="lista-setores-checkboxes" style="max-height: 150px; overflow-y: auto;">
+                    {% set deptos_selecionados = pergunta.departamentos | map(attribute='id') | list %}
+                    {% for depto in todos_departamentos %}
+                        <div>
+                            <input type="checkbox" name="departamentos" value="{{ depto.id }}" id="depto-{{ depto.id }}"
+                                {% if depto.id in deptos_selecionados and not pergunta.para_todos_setores %}checked{% endif %}
+                                {% if pergunta.para_todos_setores %}disabled{% endif %}>
+                            <label for="depto-{{ depto.id }}">{{ depto.nome }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <br>
+
+        <div id="campos-objetivos">
+            <div id="campos-multipla-escolha">
+                <label for="opcao_a">Opção A:</label><br>
+                <input type="text" name="opcao_a" style="width: 100%;" value="{{ pergunta.opcao_a or '' }}"><br><br>
+                <label for="opcao_b">Opção B:</label><br>
+                <input type="text" name="opcao_b" style="width: 100%;" value="{{ pergunta.opcao_b or '' }}"><br><br>
+                <label for="opcao_c">Opção C:</label><br>
+                <input type="text" name="opcao_c" style="width: 100%;" value="{{ pergunta.opcao_c or '' }}"><br><br>
+                <label for="opcao_d">Opção D:</label><br>
+                <input type="text" name="opcao_d" style="width: 100%;" value="{{ pergunta.opcao_d or '' }}"><br><br>
+            </div>
+
+            <label for="resposta_correta">Resposta Correta:</label><br>
+            <select id="resposta-multipla-escolha" name="resposta_correta_me">
+                <option value="a" {% if pergunta.resposta_correta == 'a' %}selected{% endif %}>A</option>
+                <option value="b" {% if pergunta.resposta_correta == 'b' %}selected{% endif %}>B</option>
+                <option value="c" {% if pergunta.resposta_correta == 'c' %}selected{% endif %}>C</option>
+                <option value="d" {% if pergunta.resposta_correta == 'd' %}selected{% endif %}>D</option>
+            </select>
+            <select id="resposta-vf" name="resposta_correta_vf" style="display: none;">
+                <option value="v" {% if pergunta.resposta_correta == 'v' %}selected{% endif %}>Verdadeiro</option>
+                <option value="f" {% if pergunta.resposta_correta == 'f' %}selected{% endif %}>Falso</option>
+            </select><br><br>
+            
+            <label for="tempo_limite">Tempo em Segundos:</label><br>
+            <input type="number" name="tempo_limite" value="{{ pergunta.tempo_limite or '' }}" min="5" style="width: 100px;"><br><br>
+        </div>
+
+        <label for="data_liberacao">Data de Liberação:</label><br>
+        <input type="date" name="data_liberacao" value="{{ pergunta.data_liberacao.strftime('%Y-%m-%d') }}" required><br><br>
+
+        <button type="submit" class="btn">Salvar Alterações</button>
+        <a href="{{ url_for('pagina_admin') }}" style="margin-left: 10px;">Cancelar</a>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+    function toggleQuestionFields() {
+        const tipo = document.getElementById('tipo-pergunta').value;
+        const camposObjetivos = document.getElementById('campos-objetivos');
+        const camposMultipla = document.getElementById('campos-multipla-escolha');
+        const respostaMultipla = document.getElementById('resposta-multipla-escolha');
+        const respostaVf = document.getElementById('resposta-vf');
+        
+        camposObjetivos.style.display = 'none';
+        camposMultipla.style.display = 'none';
+        respostaMultipla.style.display = 'none';
+        respostaVf.style.display = 'none';
+        
+        if (tipo === 'multipla_escolha') {
+            camposObjetivos.style.display = 'block';
+            camposMultipla.style.display = 'block';
+            respostaMultipla.style.display = 'block';
+            respostaMultipla.name = 'resposta_correta';
+            respostaVf.name = '';
+        } else if (tipo === 'verdadeiro_falso') {
+            camposObjetivos.style.display = 'block';
+            respostaVf.style.display = 'block';
+            respostaVf.name = 'resposta_correta';
+            respostaMultipla.name = '';
+        }
+    }
+    
+    function toggleAllSectors(isChecked) {
+        const checkboxes = document.querySelectorAll('#lista-setores-checkboxes input[type="checkbox"]');
+        checkboxes.forEach(cb => {
+            cb.disabled = isChecked;
+            if (isChecked) {
+                cb.checked = false;
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleQuestionFields();
+        const paraTodosCheckbox = document.getElementById('para_todos');
+        if (paraTodosCheckbox) {
+            toggleAllSectors(paraTodosCheckbox.checked);
+        }
+    });
+    </script>
+{% endblock %}

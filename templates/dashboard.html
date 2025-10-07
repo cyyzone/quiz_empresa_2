@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h1 class="welcome-message">Bem-vindo(a), {{ nome }}!</h1>
+    
+    <div style="text-align: left; max-width: 700px; margin: 30px auto;">
+        <h2 style="text-align: center; margin-bottom: 20px;">Avisos Pendentes</h2>
+        
+        {% if contagem_quiz > 0 %}
+            <a href="{{ url_for('pagina_quiz') }}" style="text-decoration: none;">
+                <div class="alert" style="background-color: #cce5ff; color: #004085; border-color: #b8daff; cursor: pointer;">
+                    Você tem <strong>{{ contagem_quiz }}</strong> pergunta(s) de quiz rápido para responder. Clique aqui!
+                </div>
+            </a>
+        {% endif %}
+        
+        {% if contagem_atividades > 0 %}
+            <a href="{{ url_for('pagina_atividades') }}" style="text-decoration: none;">
+                <div class="alert" style="background-color: #fff3cd; color: #856404; border-color: #ffeeba; cursor: pointer;">
+                    Você tem <strong>{{ contagem_atividades }}</strong> atividade(s) discursiva(s) para realizar. Clique aqui!
+                </div>
+            </a>
+        {% endif %}
+
+        {% if contagem_feedbacks > 0 %}
+             <a href="{{ url_for('minhas_respostas') }}" style="text-decoration: none;">
+                <div class="alert" style="background-color: #d4edda; color: #155724; border-color: #c3e6cb; cursor: pointer;">
+                    Você tem <strong>{{ contagem_feedbacks }}</strong> feedback(s) novos em suas atividades discursivas. Clique para ver!
+                </div>
+            </a>
+        {% endif %}
+
+        {% if contagem_quiz == 0 and contagem_atividades == 0 and contagem_feedbacks == 0 %}
+            <div style="text-align: center; padding: 20px;">
+                <p>Ótimo trabalho! Você está em dia com todas as suas atividades.</p>
+            </div>
+        {% endif %}
+    </div>
+    <hr>
+
+    <div class="actions">
+        <a href="{{ url_for('pagina_quiz') }}" class="btn">🚀 Quiz Rápido 🚀</a>
+        <a href="{{ url_for('pagina_atividades') }}" class="btn">📝 Atividades Discursivas 📝</a>
+        <a href="{{ url_for('minhas_respostas') }}" class="btn btn-secondary" style="background-color: #ffc107; color: #333;">📋 Ver Minhas Respostas 📋</a>
+        <a href="{{ url_for('pagina_ranking') }}" class="btn btn-secondary">🏆 Ver Ranking 🏆</a>
+    </div>
+
+    <a href="{{ url_for('logout') }}" class="logout-link">Sair</a>
+</div>
+{% endblock %}

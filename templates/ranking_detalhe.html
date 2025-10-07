@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Ranking - {{ departamento.nome }}{% endblock %}
+
+{% block content %}
+<div class="ranking-container" style="max-width: 800px;">
+    <h1>🏆 Ranking Individual - {{ departamento.nome }} 🏆</h1>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Pos.</th>
+                <th>Membro</th>
+                <th>Pontuação</th>
+                <th>Respostas</th>
+                <th>Acertos</th>
+                <th>Aproveitamento</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for membro in ranking %}
+            <tr>
+                <td><b>{{ loop.index }}</b></td>
+                <td>{{ membro.nome }}</td>
+                <td><strong style="font-size: 20px;">{{ membro.pontos_totais }}</strong></td>
+                <td>{{ membro.total_respostas }}</td>
+                <td>{{ membro.total_acertos }}</td>
+                <td>
+                    <strong style="color: {% if membro.percentual_acertos >= 80 %}#28a745{% elif membro.percentual_acertos >= 50 %}#ffc107{% else %}#dc3545{% endif %};">
+                        {{ membro.percentual_acertos }}%
+                    </strong>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" style="text-align: center;">Nenhum membro deste setor respondeu ao quiz ainda.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="{{ url_for('pagina_ranking') }}">Voltar para o Ranking por Setor</a>
+    </div>
+</div>
+{% endblock %}
